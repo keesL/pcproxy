@@ -1,0 +1,733 @@
+#!/usr/bin/env wish
+# ProController Proxy
+#
+# $Id: pcproxy.in,v 1.2 2004/03/11 09:05:11 kees Exp $
+#
+########################################################################A
+#    Copyright (C) 2001-2003  Kees Leune
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+# load support modules
+
+source @SCRIPT_PATH@/core.tcl
+source @SCRIPT_PATH@/gui.tcl
+source @SCRIPT_PATH@/settings.tcl
+source @SCRIPT_PATH@/flightplans.tcl
+source @SCRIPT_PATH@/fpserver.tcl
+
+# Global variables
+set SERVER      -1            ;# server socket. -1 is unconnected
+global SOCKET                 ;# socket on which the server will live
+global CHANNELS               ;# array with active channels. The key represents
+                              ;# the channel, the value is the IP-address
+global CALLSIGNS              ;# array with channel as key, value is
+                              ;# callsign
+global SERVER                 ;# the server channel
+global PRIMARY                ;# the primary channel (the one that does
+                              ;# send position updates)
+global PILOTS                 ;# list containing channel ids of pilots
+global TDCACHE
+global WDCACHE
+global CDCACHE
+
+set TIMEOUTS(fppurge)    30000     ;# 30 sec. interval to purge flightplans
+set TIMEOUTS(clientdata) 20000     ;# 20 sec. interval for rx check client
+set TIMEOUTS(serverdata) 20000     ;# 20 sec. interval for rx check server
+set TIMEOUTS(status)     150000    ;# 2.30 min. interval for status update
+set TIMEOUTS(fp)         120       ;# 30 sec. max. age of positions
+
+##
+# Check the global variable $debug, which is linked to the checkbox in the
+# File menu. If it is checked, debug out will be sent to the console, if it
+# is not checked, nothing happens.
+#
+# param $msg Message to send if debug is active
+#
+proc debug {msg} {
+    global SETTINGS
+
+    if {[info exists SETTINGS(debug)] && [string match $SETTINGS(debug) 1]} {
+        cprint "DEBUG: $msg"
+    }
+} ;# end of debug
+
+##
+# Close a channel gracefully. If the channel is the primary channel, all
+# remaining client channels and the server channel will be disconnected as
+# well. If the server channel is disconnected, the Properties dialog is
+# re-enabled.
+#
+# param $ch     Channel identifier of the channel to be closed
+#
+proc disconnect {ch} {
+    global CHANNELS SERVER PRIMARY CALLSIGNS SETTINGS
+
+    catch {
+	close $ch
+        cprint "Connection closed with client $CHANNELS($ch)"
+        unset CHANNELS($ch)
+        unset CALLSIGNS($ch)
+        after cancel servertimeout
+        after cancel showStatus
+    } 
+
+    if {[string match $SERVER $ch]} {
+        after cancel servertimeout
+        after cancel showStatus
+        cprint "Disconnected from server $SETTINGS(remote_ip)."
+        catch {
+            foreach {channel ip} [array get CHANNELS] {
+                catch {
+                    close $channel
+                    cprint "Connection closed with client $CHANNELS($ch)"
+                    unset CHANNELS($channel)
+                    unset CALLSIGNS($channel)
+                } 
+            }
+        }
+        after cancel servertimeout
+        after cancel showStatus
+        after cancel purgeFlightPlans
+        after cancel clienttimeout
+        debug "Stopping flight plan checker"
+        set SERVER -1
+    } \
+    elseif {[info exists PRIMARY] && [string match $ch $PRIMARY]} {
+        cprint "Primary client disconnected"
+        disconnect $SERVER
+        after cancel clienttimeout
+    }
+
+
+} ;# end of disconnect
+
+##
+# Shows the number of connected clients in the log window
+#
+proc showStatus {} {
+    global CHANNELS
+    global SERVER
+    global TIMEOUTS
+    global FPSOCKETS
+    global FPLISTENER
+
+    if {$SERVER == -1} { 
+        set servers 0 
+    } else {
+        set servers 1
+    }
+
+    set clients [llength [array names CHANNELS]]
+    cprint "Currently connected to $servers server(s) with $clients client(s)."
+
+    if {[info exists FPLISTENER]} {
+        set clients [llength [array names FPSOCKETS]]
+        cprint "$clients client(s) connected to the flightplan server."
+    }
+    catch {
+        after cancel showStatus
+        after $TIMEOUTS(status) showStatus
+    }
+} ;# end showStatus
+
+##
+# Disconnect all channels. This is done by disconnecting the primary
+# channel, which in turn results in closing all other channels.
+#
+proc disconnectAll {} {
+    global PRIMARY
+
+    cprint "Disconnecting all channels"
+
+    if {[info exists PRIMARY]} {
+        disconnect $PRIMARY
+    }
+} ;# end disconnectAll
+
+
+##
+# Close all connections and terminates the program.
+#
+proc shutdown {} {
+   global STOP
+
+   cprint "Shutting down; disconnecting all channels."
+   disconnectAll
+   set STOP [core::timestamp]
+} ;# end of shutdown      
+
+
+##
+# Print output to a network channel. The channel will be disconnected
+# if a problem occurs.
+#
+# param $ch          channel to print to
+# param $message     message to display
+#
+proc uprint {ch message} {
+    global SERVER CHANNELS CALLSIGNS SETTINGS
+
+    set x [ catch { 
+        puts $ch "$message" 
+        flush $ch
+    } ]
+
+    if { $x } { 
+        if {[string match $ch $SERVER]} {
+            cprint "Error writing to server $SETTINGS(remote_ip)."
+        } else {
+            cprint "Error writing to client $CALLSIGNS($ch) on $CHANNELS($ch)"
+        }
+
+        debug "Error: $x"
+        disconnect $ch 
+    }
+} ;# end of uprint
+
+##
+# Print a message to the log window, prefixed by the timestamp. Scroll the
+# logwindow down so that the last line is always visible.
+# 
+# param $message    Message to print
+#
+proc cprint {message} {
+    global SETTINGS
+
+    if {!$SETTINGS(debug)} { .topcanvas.logText configure -state normal }
+    .topcanvas.logText insert end "[core::timestamp] $message\n"
+    .topcanvas.logText see end
+    if {!$SETTINGS(debug)} { .topcanvas.logText configure -state disabled }
+} ;# end of cprint
+
+##
+# Read a message from a channel. The channel will be disconnected when an
+# error occurs.
+#
+# param $ch      channel to read from
+# returns        message read from channel
+#
+proc uread ch {
+    global CHANNELS CALLSIGNS SERVER SETTINGS errorInfo
+
+    set x [ catch { set line [gets $ch] } ]
+    if { $x } { 
+        if {[string match $ch $SERVER]} {
+            cprint "Error reading from server $SETTINGS(remote_ip)."
+            debug $errorInfo
+        } else {
+            cprint "Error reading from client $CALLSIGNS($ch) on $CHANNELS($ch)"
+            debug $errorInfo
+        }
+	exit
+    }
+    
+    return $line
+}    
+
+##
+# Handle incoming connections. For each incomming connection, a new event
+# handler is started. Active channels are kept in the CHANNELS array.
+#
+# param $ch        channel that the user is on 
+# param $address   address of remote host
+# param $port      portnumber on remote host
+#
+proc server {ch address port} {
+    global CHANNELS
+
+    #if {[checkACL $address $ch]} {
+    #    cprint "CONNECTION REFUSED on client port"
+    #    return
+    #}
+    debug "Incoming connection from $address"
+
+    # set buffering to line buffering.
+    fconfigure $ch -buffering line
+    set CHANNELS($ch) $address
+
+    fileevent $ch readable  "client_handler $ch $address $port"
+} ;# end server
+
+
+##
+# Process any command on the client interface. 
+# Connection will be closed if a real problem occurs.
+#
+# param $ch       Channel identifier of the user I/O stream
+# param $address  IP address (unresolved!) of the peer
+# param $port     TCP port of the peer
+#
+proc client_handler {ch address port} {
+    global SERVER               ;# server channel
+    global CHANNELS             ;# array with active channels
+    global PRIMARY              ;# pointer to active channel
+    global CALLSIGNS
+    global SETTINGS
+    global TIMEOUTS
+    global errorInfo
+    global PILOTS
+
+    after cancel clienttimeout
+    after $TIMEOUTS(clientdata) clienttimeout
+    # check if the line is still up, if not disconnect gracefully
+    if {[eof $ch]} {
+        cprint "100: Lost connection from client $address"
+        disconnect $ch
+
+        return
+    }
+
+    # read input from the incoming channel and put in in the variable
+    # $input. Make sure the input is a string, not a list.
+    if {[catch {
+        set input [uread $ch]
+    }]} {
+        cprint "101: Error reading input from client $address"
+        cprint $errorInfo
+        disconnect $ch
+
+        return
+    }
+
+    
+    # #AA packets and #AP packets are sent when a controller or a pilot
+    # connects to the network. It is sent as the first message, and it is
+    # sent only once. When an #AA or #AP packet is received, they are added
+    # to the CALLSIGNS array. The first incoming channel is promoted to be
+    # the primary channel.
+    set add 0
+    if {[regexp {^\#AA} $input result]} {
+        set add 1
+    } 
+    if {[regexp {^\#AP} $input result]} {
+        set add 1
+        lappend PILOTS $ch
+    }
+    if {$add} {
+        set callsign [string range [lindex [split $input :] 0] 3 end]
+        set CALLSIGNS($ch) $callsign
+
+        # allow a primary client to connect
+        if { $SERVER == -1} {
+            cprint "Primary client $callsign from $address"
+            set PRIMARY $ch
+            if {[catch {
+                set SERVER [socket $SETTINGS(remote_ip) $SETTINGS(remote_port)]
+                debug "Starting flight plan checker"
+                after $TIMEOUTS(fppurge) purgeFlightPlans
+            }]} {
+                cprint "103: Could not connect to server $SETTINGS(remote_ip)"
+                debug $errorInfo
+                disconnectAll
+                return
+            }
+            cprint "Connected to server $SETTINGS(remote_ip)"
+            if {$SETTINGS(connected)} {
+                showStatus
+            }
+
+            fconfigure $SERVER -buffering line
+            fileevent $SERVER readable "server_handler $SERVER"
+        } else {
+            cprint "Secondary client $callsign"
+            uprint $ch "#TMPCPROXY:$callsign:Initiating secondary connection"
+            uprint $ch "#TMPCPROXY:$callsign:to server $SETTINGS(remote_ip)"
+            uprint $ch "#TMPCPROXY:$callsign:via ProController proxy."
+        }
+
+    }
+
+    # Relay all traffic of the primary server. Filter all traffic from
+    # secondary connections.
+    if {[string match $ch $PRIMARY]} {
+      # Although they will be passed on, certain packets need some fixing
+      # as they might contain fundamentally broken data.
+
+      # Check for position packet.
+      if {[string index $input 0]=="@"} {
+	# Split up the packet.
+	set inList [split $input ":"]
+	# and inspect the altitude field, nr. 6.
+	if {([lindex $inList 6]<1) || ([lindex $inList 6]>100000)} {
+	  # Funky altitude, set to 1 ft, keep all other fields unchanged.
+	  set input [lindex $inList 0]
+	  append input ":[lindex $inList 1]"
+	  append input ":[lindex $inList 2]"
+	  append input ":[lindex $inList 3]"
+	  append input ":[lindex $inList 4]"
+	  append input ":[lindex $inList 5]"
+	  append input ":1"
+	  append input ":[lindex $inList 7]"
+	  append input ":[lindex $inList 8]"
+	  append input ":[lindex $inList 9]"
+	  debug "Corrected your funky altitude (was [lindex $inList 6] ft)"
+        }
+      }
+
+      # Pass the packet on.
+      uprint $SERVER $input
+    } else {
+        # translate all local callsigns to primary callsign
+        regsub $CALLSIGNS($ch) $input $CALLSIGNS($PRIMARY) output
+        set callsign $CALLSIGNS($ch)
+
+        # Filter for allowed packets
+        # 1) Allow radio tranmissions and chat
+        # 2) Allow all com requests
+        # 3) Allow all ping requests
+        # 4) Allow all info requests
+        # 5) Allow all METAR requests
+        # 6) Allow WX requests (for pilot clients)
+        set allow 0
+        if {[regexp {^#TM} $input x]} { 
+            set target [lindex [split $input :] 1]
+            if {[regexp {\*} $target x]} {
+                cprint "Broadcasts not allowed from secondary clients."
+            } else {
+                debug "ALLOW from $callsign: send message"
+                set allow 1
+            }
+        } elseif {[regexp {^\$CQ.+C\?$} $input x]} { 
+            debug "ALLOW from $callsign: com?"
+            set allow 1
+        } elseif {[regexp {^\$PI} $input x]} {
+            debug "ALLOW from $callsign: ping"
+            set allow 1
+        } elseif {[regexp {^\$CQ.+INF$} $input x]} {
+            set allow 1
+        } elseif {[regexp {^\$AX.+:METAR:} $input x]} {
+            debug "ALLOW from $callsign: metar request"
+            set allow 1
+        } elseif {[regexp {^\$CQ.+:FP:} $input x]} {
+            debug "ALLOW from $callsign: flightplan request"
+            set allow 1
+        } elseif {[regexp {^#WX} $input x]} {
+            debug "ALLOW from $callsign: WX request"
+        }
+
+        if {$allow} {
+            uprint $SERVER $output
+        } 
+
+        # a secondary client may ask for weather; but that request shall
+        # not be forwarded to the network. Instead, it will be served from
+        # the cache. If no data is in the cache, the client will receive
+        # nothing.
+        # TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+    }
+} ;# end proc process_command
+
+##
+# Process all data sent from the server to the clients.
+# Connection will be closed if a real problem occurs.
+#
+# param $ch       Channel identifier of the user I/O stream
+#
+proc server_handler {ch} {
+    global SERVER           ;# socket to server
+    global CHANNELS         ;# all active channels
+    global CALLSIGNS        ;# all active callsigns
+    global PRIMARY          ;# primary channel
+    global SETTINGS
+    global FLIGHTPLANS
+    global POSITIONS
+    global TIMEOUTS
+    global errorInfo
+    global CDCACHE
+    global TDCACHE
+    global WDCACHE
+
+
+    after cancel servertimeout
+    after $TIMEOUTS(clientdata) servertimeout
+    # check if the line is still up, if not disconnect gracefully
+    if {[eof $ch]} {
+        cprint "104: Lost connection from server $SETTINGS(remote_ip)"
+        disconnect $ch
+
+        return
+    }
+
+    # Read input from the incoming channel and put in in the variable
+    # $input. Make sure the input is a string, not a list.
+    set readerr [catch {
+        set input [uread $ch]
+    }]
+    if ($readerr) {
+        cprint "105: Error reading input from server $SETTINGS(remote_ip)"
+        debug $errorInfo
+        disconnect $SERVER
+        disconnect $PRIMARY
+        return
+    }
+    if {$input == {}} {
+        return
+    }
+
+    # Forward server channel to all client channels. Translate the primary
+    # callsign to the appropriate callsign in use on the secondary channel
+    foreach {channel ip} [array get CHANNELS] {
+        if {[catch {
+            regsub $CALLSIGNS($PRIMARY) $input $CALLSIGNS($channel) output
+        }]} {
+            cprint "Unknown client on $ip. Disconnecting."
+            disconnect $channel
+            return
+        }
+    
+        # pass all messages, but screen private chat messages against the
+        # settable option chat
+        set allow 1
+        if {[regexp {^#TM} $output x]} {
+            set data     [split $output :]
+            set receiver [lindex $data 1]
+
+            # refuse if direct message and chat is 0
+            if {![regexp {^[@*]} $receiver x] && !$SETTINGS(chat)} {
+                set allow 0
+            }
+        }
+
+        # override blocks if target is primary
+        if {[string match $PRIMARY $channel]} {
+            set allow 1
+        } 
+
+        if {$allow} {
+	  # Check for position packet.
+	  if {[string index $output 0]=="@"} {
+	    # Split up the packet.
+	    set outList [split $output ":"]
+	    # and look for the altitude field.
+            if {([lindex $outList 6]<1) || ([lindex $outList 6]>100000)} {
+	      # Funky altitude, set to 1 ft, keep all other fields unchanged.
+	      set output [lindex $outList 0]
+              debug "Corrected [lindex $outList 1] for funky altitude\
+	             ([lindex $outList 6] ft)"
+	      append output ":[lindex $outList 1]"
+	      append output ":[lindex $outList 2]"
+	      append output ":[lindex $outList 3]"
+	      append output ":[lindex $outList 4]"
+	      append output ":[lindex $outList 5]"
+	      append output ":1"
+	      append output ":[lindex $outList 7]"
+	      append output ":[lindex $outList 8]"
+	      append output ":[lindex $outList 9]"
+	    }
+	    # Same thing again, now for the transponder field.
+	    set outList [split $output ":"]
+	    if {[lindex $outList 0]=="@S" && \
+	        [lindex $outList 6]<=$SETTINGS(modec)} {
+              # Force the transponder to mode C ("N").
+              debug "Forced [lindex $outList 1] transponder mode C\
+	             (altitude [lindex $outList 6] below $SETTINGS(modec)\
+		     ft)"
+	      set output "@N"
+	      append output ":[lindex $outList 1]"
+	      append output ":[lindex $outList 2]"
+	      append output ":[lindex $outList 3]"
+	      append output ":[lindex $outList 4]"
+	      append output ":[lindex $outList 5]"
+	      append output ":[lindex $outList 6]"
+	      append output ":[lindex $outList 7]"
+	      append output ":[lindex $outList 8]"
+	      append output ":[lindex $outList 9]"
+	    }
+	  }
+          uprint $channel $output
+        }
+    }
+
+    # add flightplans to the fp database
+    if {[string match {$FP*} $input]} {
+        set fp [split $input :]
+        set callsign [string range [lindex $fp 0] 3 end]
+        if {![info exists FLIGHTPLANS($callsign)]} {
+            set FLIGHTPLANS($callsign) $input
+            debug "Flightplan for $callsign received."
+        } else {
+            set FLIGHTPLANS($callsign) $input
+            debug "Flightplan for $callsign refreshed."
+        }
+    }
+
+    # cache position updates
+    if {[string match {@*} $input]} {
+        set data     [split $input :]
+        set callsign [lindex $data 1]
+        set xpdr     [lindex $data 2]
+        set now      [clock seconds]
+
+        set POSITIONS($callsign) [list $now $xpdr]
+    }
+
+    # cache weather profiles; send wx to secondary clients from the cache
+    # XXX
+    # There is a problem here. In order to cache this appropriately, I need
+    # to cache all the MS specific packets. ie. #TD (temperature layers),
+    # #WD (wind layers) and #CD (cloud layers). The actual METARs appear to
+    # be only used as a meaningless text string
+    if {[string match {#TD*} $input]} {
+        set TDCACHE $input) 
+    } elseif {[string match {#CD*} $input]} {
+        set CDCACHE $input
+    } elseif {[string match {#WD*} $input]} {
+        set WDCACHE $input
+    }
+
+    # remove pilots from cache when disconnect is received
+    # NOTE: protocol inconsistency here! The server sends an extra field
+    # after the pilot callsign. 
+    if {[string match {#DP*} $input]} {
+        set callsign [string range [lindex [split $input :] 0] 3 end]
+        if {[info exists POSITIONS($callsign]} {
+            debug "$callsign disconnected. Purging flightplan."
+            catch {
+                unset POSITIONS($callsign)
+                unset FLIGHTPLANS($callsign)
+            }
+        }
+    }
+
+
+} ;# end server_handler
+
+
+##
+# Iterate over all position updates and remove the ones that are outdated.
+# With the position updates that are left, go over the flightplans and
+# throw everything out of which do not have a position update.
+#
+proc purgeFlightPlans {} {
+    global FLIGHTPLANS          ; # array with flightplans
+    global POSITIONS            ; # array with position updates
+    global SERVER               ; # server socket
+    global TIMEOUTS             ; # settings for timeouts
+    global CALLSIGNS            ; # array with callsigns
+    global PRIMARY              ; # primary client
+
+    # the max. age of flightplans is now minus the max. age
+    set limit [expr [clock seconds] - $TIMEOUTS(fp)]
+
+    # clean out all position updates that have timed out
+    set validPlanes {}
+    foreach {callsign data} [array get POSITIONS] {
+        # data is a list {timestamp transponder}
+        if {[lindex $data 0] < $limit} {
+            unset POSITIONS($callsign)
+        } else {
+            lappend validPlanes $callsign
+        }
+    }
+
+    # remove all flightplans that are not in the validPlans list
+    foreach callsign [array names FLIGHTPLANS] {
+        if {[lsearch $validPlanes $callsign] == -1} {
+            debug "Position update timeout for $callsign. Purging $callsign."
+            unset FLIGHTPLANS($callsign)
+        }
+    }
+    
+    # stop purging if we have (been) disconnected
+    if {$SERVER != -1} {
+        after $TIMEOUTS(fppurge) purgeFlightPlans
+    } else {
+        debug "Stopping flight plan checker"
+    }
+} ;# end removeFlightplan
+
+
+##
+#
+proc clienttimeout {} {
+    global TIMEOUTS
+
+    cprint "WARNING: no client data received for 20 seconds!"
+    after cancel clienttimeout
+    after $TIMEOUTS(clientdata) clienttimeout
+}
+
+##
+#
+proc servertimeout {} {
+    global TIMEOUTS
+
+    cprint "WARNING: no server data received for 20 seconds!"
+    after cancel servertimeout
+    after $TIMEOUTS(serverdata) servertimeout
+}
+
+##### Main body ##########################################################
+# load settings
+initSettings
+loadSettings
+
+# check if a command line port parameter is given. If not, use default
+# settings.
+if {[llength $argv] > 0} {
+    set PORT [lindex $argv 0]
+}
+
+# if called with -h, send usage information
+if {[lsearch -exact $argv {-h}] != -1} {
+    puts "Usage: [info script] \[port\] \[options\]"
+    puts "    port: TCP port on which to listen (default: $SETTINGS(my_port))"
+    exit
+}
+
+# set up the graphical user interface
+createGUI
+
+# initialize access control list
+#initACL
+
+# Create a socket server and set buffering to line buffering. On success,
+# set the channel to line buffering. Inform the user what happened.
+if {[catch {
+    set SOCKET [socket -server server $SETTINGS(my_port)]
+}]} {
+    cprint "Unable to start server on port $SETTINGS(my_port)."
+} else {
+    fconfigure $SOCKET -buffering line
+    cprint "Proxy listening on [info hostname] on port $SETTINGS(my_port)"
+}
+
+# Wait until shutdown. STOP is set by the shutdown command that can be
+# given on the console, or by remote login from the allowed hosts.
+if {$SETTINGS(wwwserver)} {
+    startHttpServer
+}
+
+if {$SETTINGS(fpserver)} {
+    startFPserver
+}
+
+vwait STOP
+disconnectAll
+
+
+# close down the server and exit program
+catch {
+    close $SOCKET
+    cprint "Proxy halted"
+}
+
+# exit program
+exit
+
+# END-OF-FILE

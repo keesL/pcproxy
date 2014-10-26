@@ -1,0 +1,3 @@
+Special thanks go to Joost van Baal to help me reorganize the source tree in
+an attempt to have me use the autotools, and to help me package the program
+for Debian.

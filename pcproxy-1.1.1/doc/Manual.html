@@ -1,0 +1,371 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.1  (Linux)">
+	<META NAME="AUTHOR" CONTENT="Kees Leune">
+	<META NAME="CREATED" CONTENT="20010225;13234300">
+	<META NAME="CHANGED" CONTENT="20040410;82300">
+	<STYLE>
+	<!--
+		@page { size: 8.27in 11.69in; margin: 0.79in }
+		H1 { margin-bottom: 0.08in }
+		H1.western { font-family: "Arial", sans-serif; font-size: 18pt }
+		H1.cjk { font-family: "Bitstream Vera Sans"; font-size: 12pt; font-weight: medium }
+		H1.ctl { font-family: "Tahoma", "Lucidasans", "Lucida Sans", "Arial Unicode MS"; font-size: 12pt; font-weight: medium }
+		P { margin-bottom: 0.08in }
+		H2 { margin-bottom: 0.08in }
+		H2.western { font-family: "Arial", sans-serif; font-size: 16pt; font-style: italic }
+		H2.cjk { font-size: 12pt; font-weight: medium }
+		H2.ctl { font-size: 12pt; font-weight: medium }
+		H3 { margin-bottom: 0.08in }
+		H3.western { font-family: "Arial", sans-serif; font-weight: medium }
+		H3.cjk { font-size: 12pt; font-weight: medium }
+		H3.ctl { font-size: 12pt; font-weight: medium }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="nl-NL" DIR="LTR">
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, sans-serif"><FONT SIZE=6 STYLE="font-size: 26pt">PCProxy
+User Manual</FONT></FONT></P>
+<P>Version 1.1.0</P>
+<P>(C) 2000-2004 by Kees Leune &lt;kees@leune.org&gt;</P>
+<P><BR><BR>
+</P>
+<DIV ID="Table of Contents1" DIR="LTR">
+	<P><BR><BR>
+	</P>
+	<DIV ID="Table of Contents1_Head" DIR="LTR">
+		<P STYLE="margin-top: 0.17in; page-break-after: avoid"><FONT FACE="Arial, sans-serif"><FONT SIZE=4 STYLE="font-size: 16pt"><B>Table
+		of Contents</B></FONT></FONT></P>
+	</DIV>
+	<P STYLE="margin-bottom: 0in">1 Version 1</P>
+	<P STYLE="margin-bottom: 0in">2 License 1</P>
+	<P STYLE="margin-bottom: 0in">3 Windows distribution 2</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">3.1 Requirements 2</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">3.2 Installation
+	instructions 2</P>
+	<P STYLE="margin-bottom: 0in">4 Debian distribution 2</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">4.1 Installation
+	instructions 2</P>
+	<P STYLE="margin-bottom: 0in">5 Source distribution 2</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">5.1 Requirements 2</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">5.2 Installation
+	instructions 2</P>
+	<P STYLE="margin-bottom: 0in">6 About PCProxy 3</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">6.1 How do I use
+	it? 3</P>
+	<P STYLE="margin-left: 0.39in; margin-bottom: 0in">Basic
+	functionality 3</P>
+	<P STYLE="margin-left: 0.39in; margin-bottom: 0in">Flightplans 3</P>
+	<P STYLE="margin-left: 0.39in; margin-bottom: 0in">Flight plan
+	socket stream 4</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">6.2 User manual 4</P>
+	<P STYLE="margin-left: 0.39in; margin-bottom: 0in">The main window 4</P>
+	<P STYLE="margin-left: 0.39in; margin-bottom: 0in">The properties
+	window 5</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">6.3 How does it
+	work? 6</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">6.4 How large is
+	it? 6</P>
+	<P STYLE="margin-left: 0.2in; margin-bottom: 0in">6.5 Some important
+	remarks 6</P>
+</DIV>
+<P><BR><BR>
+</P>
+<H1 CLASS="western">1 Version</H1>
+<P>This document describes version 1.0.4 of PCProxy</P>
+<H1 CLASS="western">2 License</H1>
+<P>A masquerading proxy for Simulated Air Traffic Networks</P>
+<P>Copyright (c) 2000-2004 Kees Leune &lt;kees@leune.org&gt;</P>
+<P>This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.</P>
+<P>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.</P>
+<P>You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+USA</P>
+<H1 CLASS="western">3 Windows distribution</H1>
+<H2 CLASS="western">3.1 Requirements</H2>
+<P>PCProxy does not depend on any other software. However, for the
+program to be useful, you will need a radar client such as
+ProController or ASRC.</P>
+<H2 CLASS="western">3.2 Installation instructions</H2>
+<OL>
+	<LI><P STYLE="margin-bottom: 0in">Download the .zip file from the
+	download site at http://www.leune.org/pcproxy/.</P>
+	<LI><P STYLE="margin-bottom: 0in">Unzip the file that you just
+	downloaded.</P>
+	<LI><P STYLE="margin-bottom: 0in">Copy pcproxy.exe to a directory of
+	your choice.</P>
+</OL>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H1 CLASS="western">4 Debian distribution</H1>
+<H2 CLASS="western">4.1 Installation instructions</H2>
+<OL>
+	<LI><P STYLE="margin-bottom: 0in">Download the most recent deb file
+	from the download site at http://www.leune.org/pcproxy/</P>
+	<LI><P STYLE="margin-bottom: 0in">As root, run dpkg -i &lt;filename
+	you just downloaded&gt;</P>
+</OL>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">alternatively,</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<OL>
+	<LI><P STYLE="margin-bottom: 0in">Check if pcproxy is available yet
+	in the Debian archive by typing 
+	</P>
+	<P><FONT FACE="Courier 10 Pitch"># dselect update </FONT><FONT FACE="Times, serif">(
+	do this as root )</FONT><BR><FONT FACE="Courier 10 Pitch">$
+	apt-cache search pcproxy</FONT></P>
+	<LI><P><FONT FACE="Times, serif">If the program is available, type<BR><FONT FACE="Courier 10 Pitch">#
+	apt-get install pcproxy</FONT> ( do this as root )</FONT></P>
+</OL>
+<H1 CLASS="western">5 Source distribution</H1>
+<H2 CLASS="western">5.1 Requirements</H2>
+<P>You need to have Tcl/Tk (version 8.0 or later) installed if you
+want to run PCProxy from the source distribution.</P>
+<H2 CLASS="western">5.2 Installation instructions</H2>
+<OL>
+	<LI><P>Download the most recent tar.gz file from the download site
+	at http://www.leune.org/pcproxy/</P>
+	<LI><P>Unpack the tarball that you just downloaded and cd into the
+	pcproxy directory</P>
+	<LI><P>Run ./configure &amp;&amp; make &amp;&amp; sudo make install</P>
+</OL>
+<H1 CLASS="western" STYLE="page-break-before: always">6 About PCProxy</H1>
+<P STYLE="margin-bottom: 0in">PCProxy allows multiple clients to
+share a single network connect to an flight simulation network, such
+as Vatsim or IVAO, which is based on the fsd protocol. In tech-terms,
+it is a multi-connect masquerading proxy for fsd traffic over TCP/IP.
+</P>
+<H2 CLASS="western">6.1 How do I use it?</H2>
+<H3 CLASS="western">Basic functionality</H3>
+<P STYLE="margin-bottom: 0in">The program sits between the Vatsim or
+IVAO server and a radar client such as Pro Controller or ASRC. You
+will have to start pcproxy first, then ProController. Instead of
+entering the normal server IP address into your radar client's
+preferences, use the address 127.0.0.1 if you are running the proxy
+on the same computer as your radar client. If you are running the
+proxy on a separate machine from your radar client, you will have to
+use that address.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">Then, connect to the server. Keep in
+mind that the FIRST connection made to the proxy is the one that is
+relayed to the virtual air traffic control network. As a consequence,
+your callsign, your scope range, and your location are determined by
+the first connection! 
+</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">All subsequent connections to the
+server are secondary clients, and will only receive position updates
+of traffic. In addition, they can ping, ask for com frequencies,
+transmit on a frequency and use private message. All messages will be
+masqueraded as if they appeared from the primary connection.</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H3 CLASS="western">Flightplans</H3>
+<P STYLE="margin-bottom: 0in">Starting version 0.8.2, PCProxy has the
+first version of a builtin web server that you can use to view the
+flightplans in a separate window. A list of flightplans in range can
+be obtained by starting a web browser and pointing it to the computer
+on which you run PCProxy program. 
+</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">Note that the flightplan functionality
+is <I>disabled by default. If you want to use it, please please a
+check mark in front of the 'run flightplan web server' of the
+Properties window.</I></P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in"><I>PCProxy's web serve supports a
+number of options:</I></P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">dest=ICAO</P>
+</UL>
+<P STYLE="margin-left: 0.49in; margin-bottom: 0in">Filter for
+destination airports. Multiple airports can be separated with commas.</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">from=ICAO</P>
+</UL>
+<P STYLE="margin-left: 0.49in; margin-bottom: 0in">Filter for origin
+airport. Multiple airports can be separated with commas.</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">icao=ICAO</P>
+</UL>
+<P STYLE="margin-left: 0.49in; margin-bottom: 0in">Filter for origin
+or destination airport. Multiple airports can be separated with
+commas.</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">orderby=from|dest</P>
+</UL>
+<P STYLE="margin-left: 0.49in; margin-bottom: 0in">Order the output
+by airport of origin, or airport of destination. Without this
+parameter, thelist is ordered by callsign</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">refresh=x</P>
+</UL>
+<P STYLE="margin-left: 0.49in; margin-bottom: 0in">Refresh the web
+page every x seconds. It is advised to use at least 30 seconds for
+this.</P>
+<P STYLE="margin-left: 0.49in; margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">When multiple parameters are combined,
+all conditions must be fulfilled. To create a valid URL, follow the
+HTTP standard. Some examples are easiest</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="http://proxyhost/flightplan.html?refresh=60&amp;icao=eham">http://proxyhost/flightplan.html?refresh=60&amp;icao=eham</A><BR>This
+	will load the flightplans of aircraft inbound or outbound to or from
+	amsterdam schiphol. The web page will refresh every 60 seconds</P>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="http://proxyhost/flightplan.html?refresh=30&amp;from=eham&amp;orderby=dest">http://proxyhost/flightplan.html?refresh=30&amp;from=eham&amp;orderby=dest</A><BR>This
+	will load the flightplans of aircraft outbound from amsterdam
+	schiphol, ordered by destination field. The page will refresh every
+	30 seconds.</P>
+</UL>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in"><A HREF="http://proxyhost/flightplan.html?refresh=45&amp;icao=ehse,ehgr&amp;orderby=dest">http://proxyhost/flightplan.html?refresh=45&amp;icao=ehse,ehgr&amp;orderby=dest
+	<BR></A>Thiswill load the flightplans of aircraft inbound or
+	outbound to Seppe airfield or Gilze-Rijen airforce base, ordered by
+	destination.</P>
+</UL>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<P STYLE="margin-bottom: 0in">From this, it becomes clear that after
+the filename, a question mark (?) is placed, followed by a number of
+parameters that are separated by ampersands (&amp; signs).</P>
+<P STYLE="margin-bottom: 0in"><BR>
+</P>
+<H3 CLASS="western">Flight plan socket stream</H3>
+<P>Starting version 1.0.4, PCProxy is also able to stream flight
+plans on a TCP Socket. This stream is utterly useless for humans, but
+can be extremely interesting to software that desires to use
+PCProxy's functionality. For more information regarding this feature,
+please inspect the configuration file.</P>
+<H2 CLASS="western">6.2 User manual</H2>
+<P><BR><BR>
+</P>
+<H3 CLASS="western">The main window</H3>
+<P><IMG SRC="figure1.png" NAME="Graphic1" ALIGN=LEFT WIDTH=514 HEIGHT=231 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P>Note that when the debug function is active, lots of output is
+sent to the log window. The file menu contains three options, which
+all have shortcuts. Control-p, or selecting the Properties option
+brings up the window where you can adjust several settings (see
+below). Disconnect will immediately disconnect all clients and the
+link with the server, but will keep the program running. Quit also
+disconnects all clients and the link with the server, but it also
+stops the program.</P>
+<P><BR><BR>
+</P>
+<H3 CLASS="western"><BR><BR>
+</H3>
+<H3 CLASS="western" STYLE="page-break-before: always">The properties
+window</H3>
+<P><IMG SRC="figure2.png" NAME="Graphic2" ALIGN=LEFT WIDTH=236 HEIGHT=312 BORDER=0><BR CLEAR=LEFT><BR><BR>
+</P>
+<P>The following fields can be updated</P>
+<UL>
+	<LI><P>Server<BR>The internet address of the satco or ivao server.
+	Both IP addressess as well as canonical names are accepted</P>
+	<LI><P>Port<BR>The port number on which the server listens. Usually
+	6809.</P>
+	<LI><P>Debug output<BR>Show debug output to the log window. Useful
+	if you want to know what's going on</P>
+	<LI><P>Chat messages to secondary clients<BR>By default, private
+	messages are not sent to the secondary clients. With this option
+	checked, you will also be able to receive (and send) private
+	messages on the secondary clients.</P>
+	<LI><P>Run flightplan webserver<BR>If you enable this option, the
+	proxy will also behave as web server. The web server's port number
+	can be changed by editing pcproxy.ini if that is required.</P>
+	<LI><P>Status reporting connected clients<BR>With this option
+	enabled, the system will report every 2:30 minutes how many clients
+	are connected. Useful for debuging, or if you want to know what's
+	going on.</P>
+</UL>
+<P><BR><BR>
+</P>
+<P><BR><BR>
+</P>
+<H2 CLASS="western" STYLE="page-break-before: always">6.3 How does it
+work?</H2>
+<P>The proxy is written in Tcl/Tk, which means that it is
+single-threaded event driven. It roughly works like this:</P>
+<P><BR><BR>
+</P>
+<OL>
+	<LI><P>Open a server socket on port 6809 (not configurable)</P>
+	<LI><P>Setup the GUI</P>
+	<LI><P>Wait for incoming connections</P>
+	<LI><P>The first incoming connection is the primary connection. This
+	connection determines the callsign used on the network, the location
+	of the controller, the range of the scope, etc.</P>
+	<LI><P>All subsequent connections are secondary connections. These
+	connections will receive all traffic sent to the primary connection.
+	The callsign used in the primary connection will be changed to the
+	callsign of the secondary connection, to it thinks that traffic was
+	meant for it.</P>
+	<LI><P>All outgoing traffic (ie. From clients to server) on the
+	primary connection will be passed</P>
+	<LI><P>All outgoing traffic on the secondary connections will be
+	refused, except:</P>
+</OL>
+<UL>
+	<LI><P>radio telephony</P>
+	<LI><P>private messages</P>
+	<LI><P>ping requests</P>
+	<LI><P>metar requests</P>
+	<LI><P>info requests (available to supervisors and administrators
+	only)</P>
+</UL>
+<OL START=8>
+	<LI><P>All incoming traffic will be spread over all connected
+	clients, both primary and secondary. All clients will traffic as if
+	it was sent to their local callsign.</P>
+	<LI><P>If the server connection is lost, all clients are
+	disconnected</P>
+	<LI><P>If a secondary connection is lost, it is removed from the
+	queue, but nothing else happens</P>
+	<LI><P>If the primary connection is lost, all secondary connections
+	and the server connection are disconnected.</P>
+</OL>
+<P><BR><BR>
+</P>
+<H2 CLASS="western">6.4 How large is it?</H2>
+<P>That depends on how you look at it. The actual code is roughly
+1277 lines, most of which is comment. That boils down to about 50kB
+of source code. Since Tcl/Tk is an interpreted language, it is larger
+when it is wrapped into a large executable. When compiling for
+windows, the executable is about 2 Megabytes is size, zipped it is
+one file of about 1.25 Megabytes.</P>
+<H2 CLASS="western">6.5 Some important remarks</H2>
+<UL>
+	<LI><P STYLE="margin-bottom: 0in">If connections are made with
+	ProController and Squawkbox for MS Flightsimulator, the lag
+	indicator in ProController will go up considerably. This is due to
+	the fact to MS Flightsimulator puts a very heavy load on the
+	computer.</P>
+	<LI><P STYLE="margin-bottom: 0in">It is good practice NOT to use the
+	same callsign on more than one client. Although the proxy could not
+	care less if you do so, ProController will get upset rather quickly.
+	For example, all private messages sent will pop up on all client
+	connections.</P>
+</UL>
+</BODY>
+</HTML>

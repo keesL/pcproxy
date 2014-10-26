@@ -1,0 +1,151 @@
+=pod
+
+=head1 NAME
+
+pcproxy - A masquerading proxy for flight simulation networks
+
+=head1 SYNOPSIS
+
+pcproxy
+
+=head1 DESCRIPTION
+
+Using B<PCProxy>, flight simulation clients can share a single network
+connection to a flight simulation network, allowing multiple clients to
+transparantly share data and appear as one. This is particulary useful for
+players who wish to have multiple network clients active at the same time. In
+tech-terms, B<PCProxy> is a multi-connect masquerading proxy for fsd traffic
+over TCP/IP.
+
+B<PCProxy> currently only supports networks, such as VATSIM and IVAO, which
+operate using the fsd protocol.
+
+A manual of B<PCProxy> is maintained at http://www.leune.org/pcproxy/. It is
+also shipped with the package and can be found in
+F<@DOC_PATH@/Manual.html>
+
+=head1 TECHNICAL INFORMATION
+
+To use B<PCProxy>, a flight simulation program would connect to B<PCProxy> as
+if it were a network server. B<PCProxy> will then establish the actual
+connection to the flight simulation network server, which may be specified in
+the configuration file (see: CONFIGURATION FILE). By default, B<PCProxy>
+listens on at least one TCP port (default: 6809). 
+
+In addition to its basic functionality, B<PCProxy> is able to provide its own
+web server (default port: 8000) which can be used to retrieve flight plans.
+
+Another service provided by B<PCProxy> is the ability to push a technical
+stream of flight plans to external applications. To do this, B<PCProxy> can
+open an additional port (default port: 2688) to which it will push the
+information.
+
+=head1 CONFIGURATION FILE
+
+The B<PCProxy> configuration file follows a simple .ini-style format. Empty
+lines, line containing whitespace and lines starting with ; (semicolon) are
+ignored. The remaining lines are attribute-value pairs, using an = literal to
+separate value from attribute. 
+
+B<PCProxy> will look for a configuration file in the user's home directory
+which is called F<$HOME/.pcproxyrc>. If this file exists, the contents of the
+system-wide configuration file F<@SYSCONF_PATH@/pcproxy/pcproxy.ini> will be
+ignored. If no configuration file is found, a new configuration
+file called F<pcproxy.ini> will be created in the current directory.
+
+The following configuration directives are recognized:
+
+=over
+
+=item my_port = 6809
+
+Port number on which PCProxy listens for regular clients.
+
+=item remote_ip = 137.56.42.18
+
+IP address (or hostname) of VATSIM/IVAO server.
+
+=item remote_port = 6809 
+
+Port number on remote server to which PCProxy
+will connect. (usually 6809)
+
+=item modec = 0
+
+Force transponder mode C below this alt in feet.
+
+=item chat = 0 
+
+Forward private messages to secondary clients. 
+(1 = yes, 0 = no)
+
+=item debug = 1
+
+Show debug output. (1 = yes, 0 = no)
+
+=item connected = 1 
+
+Show connection status every 150 sec (1=yes, 0=no)
+
+=item wwwserver = 1
+
+Run flightplan webserver. (1 = yes, 0 = no)
+
+=item fpserver = 1 
+
+Enable PCProxy's flight plan stream. 
+(1 = yes, 0 = no)
+
+=item wwwport = 8000
+
+Port number on which PCProxy's web server listens 
+for HTTP requests.
+
+=item fpport = 2688
+
+Port number on which PCProxy feeds flightplans. 
+(default: 2688)
+
+=item fpinterval = 5000
+
+Interval between subsequent flightplan 
+feeds on fpport. (default: 5000)
+
+=back
+
+Unknown configuration directives will be ignored.
+
+=head1 REMARKS
+
+=over
+
+=item 
+
+If connections are made with ProController and Squawkbox for MS
+Flightsimulator, the lag indicator in ProController will go up
+considerably.  This is due to the fact to MS Flightsimulator 
+puts a very heavy load on the computer.
+
+=item 
+
+It is good practice NOT to use the same callsign on more than one 
+client.  Although the proxy could not care less if you do so, 
+ProController will get upset rather quickly. For example, all 
+private messages sent will pop up on all client connections.
+
+=back
+
+=head1 FILES
+
+=over
+
+=item   F<$HOME/.pcproxyrc>              PCProxy initialisation file
+        F<@SYSCONF_PATH@/pcproxy/pcproxy.ini> 
+
+=back
+
+=head1 AUTHOR
+
+Kees Leune <kees@leune.org>
+
+=cut

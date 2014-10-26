@@ -1,0 +1,20 @@
+$Id: README,v 1.1 2003/10/06 12:29:52 kees Exp $
+
+Introduction
+============
+
+PCProxy is a program that allows multiple clients to connect to an fsd network,
+such as Vatsim or IVAO, while only one real connection is made. This is
+particulary useful for having multiple ProController or ASRC sector files
+active, or for someone who wants to be a tower controller. In tech-terms, it is
+a multi-connect masquerading proxy for fsd traffic over TCP/IP.
+
+
+Stay informed
+=============
+
+If you want to keep informed about releases of PCProxy, you may subscribe to
+the pcproxy-announce list. Please send email to
+pcproxy-announce-subscribe@yahoogroups.com, or fill out the subscription
+request at the Yahoo!Groups mailing list page.
+

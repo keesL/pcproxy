@@ -1,0 +1,20 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.57)
+AC_INIT
+AM_INIT_AUTOMAKE(pcproxy, `cat VERSION`)
+
+AC_DEFINE_DIR(SYSCONF_PATH, sysconfdir)
+AC_DEFINE_DIR(SCRIPT_PATH, datadir/pcproxy)
+AC_DEFINE_DIR(DOC_PATH,  datadir/doc/pcproxy)
+
+
+AC_OUTPUT([Makefile 
+           bin/Makefile 
+           bin/pcproxy
+           lib/Makefile
+           man/Makefile 
+           man/pcproxy.pod
+           etc/Makefile
+           doc/Makefile])

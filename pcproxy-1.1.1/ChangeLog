@@ -1,0 +1,55 @@
+* 09-apr-2004 Version 1.1.1
+    
+    Fixed a bug in the module that handles saving of configuration files.
+    Also, Minor changes to the documentation. More specifically; I fixed some
+    typos in the man pages.
+
+* 01-apr-2004 Version 1.1.0
+    
+    No, not a joke! Version 1.1.0 is a rollup of all the previous releases
+    since 1.0.3. Also, some minor man page fixes were made and a few typos in
+    the manual were fixed.
+
+* 14-mar-2004 Version 1.0.7
+
+    Entering feature freeze. The changes are mostly cosmetic and are
+    aimed at making the autotools process run smoother. 
+
+* 07-mar-2004 Version 1.0.6
+
+    Typos and grammar fixed in man page
+    Cosmetic changes to manual
+    Updated a bug in flightplan webserver (Content-Type)
+    Updated a bug in flightplan webserver (Spaces before header)
+
+* 27-feb-2004 Version 1.0.5
+
+    Added the manual!
+
+* 12-feb-2004 Version 1.0.4
+
+    Added flightplan server. It is now possible to connect to a TCP port and
+    receive a feed of current flightplans.
+
+* 30-dec-2003 Version 1.0.3
+
+    Repackaged for Debian
+
+* 11-oct-2003 Version 1.0.2
+
+    Added GUI settings "Mode C below xxx feet" (JH)
+
+* 17-apr-2003 Version 1.0.1
+
+    All altitudes at or below 0ft are translated to 1ft above. This allows
+    controllers using ASRC at airports below sea level to still see echos.
+
+* 09-jan-2002 Version 1.0.0
+
+    Enhanced PS1.3 support.
+
+* 22-apr-2001 Version 0.9.0
+
+    Fixed serious security problem. 
+
+
